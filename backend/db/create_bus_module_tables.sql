@@ -1,0 +1,34 @@
+-- Create tables for Bus Management Module
+USE dream_travellers;
+
+CREATE TABLE IF NOT EXISTS routes (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  source_city VARCHAR(100) NOT NULL,
+  destination_city VARCHAR(100) NOT NULL,
+  route_name VARCHAR(255),
+  status ENUM('Active', 'Inactive') DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS buses (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  bus_name VARCHAR(100) NOT NULL,
+  bus_code VARCHAR(50) NOT NULL,
+  route_id INT UNSIGNED NOT NULL,
+  total_seats INT DEFAULT 29,
+  status ENUM('Active', 'Inactive') DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bus_seats (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  bus_id INT UNSIGNED NOT NULL,
+  seat_number INT NOT NULL,
+  seat_status ENUM('Available', 'Booked', 'Reserved') DEFAULT 'Available',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (bus_id) REFERENCES buses(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_bus_seat (bus_id, seat_number)
+) ENGINE=InnoDB;

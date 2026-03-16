@@ -1,0 +1,16 @@
+{
+  "name": "dream-travellers",
+  "version": "1.0.0",
+  "description": "This project is a simple full‑stack app: - **Frontend**: React (Create React App) in `frontend/` - **Backend**: PHP + MySQL in `dream_travellers_backend/`",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"php -S localhost:8000 -t backend\" \"npm start --prefix frontend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
