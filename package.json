@@ -5,6 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"php -S localhost:8000 -t backend\" \"npm start --prefix frontend\"",
+    "db:init": "mysql -u root < backend/db/schema.sql",
+    "db:seed": "cd backend && php seed.php",
+    "db:admin": "cd backend && php create_admin.php",
+    "db:setup": "npm run db:init && npm run db:seed",
+    "postinstall": "npm install --prefix frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
