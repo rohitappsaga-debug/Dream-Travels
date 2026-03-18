@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Book.css";
-import { Plane, Bus, Hotel } from "lucide-react";
+import { Plane, Bus, Hotel, CheckCircle } from "lucide-react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ export default function Book() {
   const [packages, setPackages] = useState([]);
   const [userId, setUserId] = useState(null);
   const [activeTab, setActiveTab] = useState("package");
+  const [bookingSuccess, setBookingSuccess] = useState(null);
 
   // Bus States
   const [busSearchCriteria, setBusSearchCriteria] = useState(null);
@@ -97,10 +98,11 @@ export default function Book() {
       customer_phone: customerPhone.trim(),
       travel_date: date.trim(),
       passengers: Number(passengers) || 1,
-      payment_method: paymentMethod,
+      payment_method: "Pay at Counter", // Default payment method after UI removal
       package_id: pkgId,
       package_title: selectedPackage.title || "",
       package_price: selectedPackage.price != null ? Number(selectedPackage.price) : 0,
+      total_amount: (selectedPackage.price != null ? Number(selectedPackage.price) : 0) * (Number(passengers) || 1)
     };
 
     // log the payload for debugging network errors
@@ -124,9 +126,14 @@ export default function Book() {
       }
 
       if (result.success) {
-        alert("✅ Booking Confirmed!");
+        setBookingSuccess({
+          booking_id: result.booking_id,
+          package_title: selectedPackage.title,
+          total_price: selectedPackage.price * passengers,
+          travel_date: date,
+          passenger_count: passengers
+        });
         localStorage.removeItem("selectedPackage");
-        navigate("/home");
       } else {
         alert("❌ Booking failed: " + result.message);
       }
@@ -135,6 +142,43 @@ export default function Book() {
       alert("❌ Error booking package.");
     }
   };
+
+  if (bookingSuccess) {
+    return (
+      <div className="book-hub-container">
+        <Navbar />
+        <div className="booking-overlay">
+          <div className="booking-modal success-modal" style={{ maxWidth: '500px', margin: '40px auto' }}>
+            <div className="success-icon-wrapper" style={{ background: 'var(--primary-light)', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
+              <div style={{ background: 'var(--primary)', color: 'white', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle size={40} />
+              </div>
+            </div>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '10px' }}>Booking Successful!</h2>
+            <p style={{ color: 'var(--gray-500)', marginBottom: '30px' }}>Your dream vacation is confirmed. Happy travels!</p>
+            
+            <div className="booking-summary-card" style={{ textAlign: "left", background: 'var(--light)', padding: '20px', borderRadius: '15px', marginBottom: '30px' }}>
+              <span className="summary-title" style={{ fontSize: '0.9rem', marginBottom: '15px' }}>Package Details</span>
+              <div className="summary-details">
+                <p>Booking ID: <strong>#{bookingSuccess.booking_id}</strong></p>
+                <p>Package: <strong>{bookingSuccess.package_title}</strong></p>
+                <p>Travel Date: <strong>{bookingSuccess.travel_date}</strong></p>
+                <p>Passengers: <strong>{bookingSuccess.passenger_count}</strong></p>
+                <p style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--gray-200)', fontSize: '1.1rem' }}>
+                  Total Amount Paid: <strong style={{ color: 'var(--primary)' }}>₹{bookingSuccess.total_price}</strong>
+                </p>
+              </div>
+            </div>
+            
+            <button className="btn-primary" style={{ width: '100%' }} onClick={() => navigate("/home")}>
+              Back to Home
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -187,11 +231,16 @@ export default function Book() {
                 <div className="form-group">
                   <label>Mobile Number (for SMS confirmation)</label>
                   <input
-                    type="tel"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="form-control"
-                    placeholder="e.g. +919876543210"
+                    placeholder="e.g. 9876543210"
                     value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setCustomerPhone(val);
+                    }}
                     required
                   />
                 </div>
@@ -242,31 +291,35 @@ export default function Book() {
                 <div className="form-group">
                   <label>Number of Passengers</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="form-control"
                     value={passengers}
-                    onChange={(e) => setPassengers(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setPassengers(val);
+                    }}
                     min="1"
                     max="10"
                     required
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Payment Method</label>
-                  <select
-                    className="form-select form-control"
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    required
-                  >
-                    <option value="credit-card">Credit Card</option>
-                    <option value="debit-card">Debit Card</option>
-                    <option value="paypal">PayPal</option>
-                  </select>
-                </div>
+                {selectedPackage && (
+                  <div className="booking-summary-card" style={{ background: '#fff', border: '1px solid var(--gray-200)', borderLeft: '4px solid var(--primary)', marginTop: '1rem', padding: '1rem', borderRadius: '8px' }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>Price per Person</span>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700 }}>₹{selectedPackage.price}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: '0.5rem', borderTop: '1px solid var(--gray-100)' }}>
+                      <span style={{ fontSize: '1rem', fontWeight: 800 }}>Total Amount</span>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)' }}>₹{selectedPackage.price * passengers}</span>
+                    </div>
+                  </div>
+                )}
 
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="btn-primary" style={{ marginTop: '1.5rem' }}>
                   Confirm Booking
                 </button>
               </form>

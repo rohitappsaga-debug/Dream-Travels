@@ -20,6 +20,28 @@ export default function AdminHotelBookings({ showToast }) {
     }
   };
 
+  const handleStatusChange = async (id, newStatus) => {
+    if (!window.confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/update_hotel_booking_status.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (showToast) showToast(data.message, "success");
+        fetchBookings();
+      } else {
+        if (showToast) showToast(data.message, "error");
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
+      if (showToast) showToast("Failed to update status", "error");
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
   }, []);
@@ -64,9 +86,10 @@ export default function AdminHotelBookings({ showToast }) {
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Booking ID</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stay Details</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Guest & Accomodation</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Payment</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
-                </tr>
+                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Payment</th>
+                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-sans">
                 {bookings.map((b) => (
@@ -109,9 +132,21 @@ export default function AdminHotelBookings({ showToast }) {
                          <div className="text-[10px] text-slate-400 uppercase tracking-tighter font-bold">Total Amount</div>
                        </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <AdminBadge status={b.status} />
-                    </td>
+                     <td className="px-6 py-4 text-center">
+                       <AdminBadge status={b.status} />
+                     </td>
+                     <td className="px-6 py-4 text-right">
+                        <select
+                          value={b.status ?? "Confirmed"}
+                          onChange={(e) => handleStatusChange(b.id, e.target.value)}
+                          className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500/20 text-slate-600 font-bold transition-all outline-none cursor-pointer hover:bg-white"
+                        >
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Cancelled">Cancelled</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Pending">Pending</option>
+                        </select>
+                     </td>
                   </tr>
                 ))}
               </tbody>

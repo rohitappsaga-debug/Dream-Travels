@@ -64,6 +64,16 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
           <p>
             Date: <strong>{date}</strong>
           </p>
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <span>Price per Seat</span>
+              <strong>₹{bus.price || 750}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem' }}>
+              <span>Total Amount</span>
+              <strong>₹{(bus.price || 750) * seatNumbers.length}</strong>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -88,11 +98,16 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
           <div className="passenger-input-wrapper">
             <Phone size={18} className="input-icon" />
             <input 
-              type="tel" 
+              type="text" 
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="form-control"
               required 
               value={form.phone}
-              onChange={(e) => setForm({...form, phone: e.target.value})}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setForm({...form, phone: val});
+              }}
               placeholder="Enter phone number"
             />
           </div>

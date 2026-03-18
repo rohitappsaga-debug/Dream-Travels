@@ -151,6 +151,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/gallery"
+          element={
+            <ProtectedRoute role="Admin">
+              <Admin initialView="gallery" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reviews"
+          element={
+            <ProtectedRoute role="Admin">
+              <Admin initialView="reviews" />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );

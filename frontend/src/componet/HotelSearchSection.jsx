@@ -60,11 +60,15 @@ export default function HotelSearchSection({ onSearch }) {
           <div className="form-group" style={{ flex: 1 }}>
             <label>Guests</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="form-control"
-              min="1"
               value={search.guests}
-              onChange={(e) => setSearch({...search, guests: e.target.value})}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setSearch({...search, guests: val});
+              }}
               required
             />
           </div>
@@ -72,11 +76,15 @@ export default function HotelSearchSection({ onSearch }) {
           <div className="form-group" style={{ flex: 1 }}>
             <label>Rooms</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="form-control"
-              min="1"
               value={search.rooms}
-              onChange={(e) => setSearch({...search, rooms: e.target.value})}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setSearch({...search, rooms: val});
+              }}
               required
             />
           </div>

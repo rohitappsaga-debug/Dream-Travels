@@ -176,11 +176,16 @@ export default function AdminHotels({ showToast }) {
               <div className="relative">
                 <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="price_per_night"
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
                   value={form.price_per_night}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setForm({...form, price_per_night: val});
+                  }}
                   required
                 />
               </div>
@@ -190,11 +195,16 @@ export default function AdminHotels({ showToast }) {
               <div className="relative">
                 <Bed className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   name="total_rooms"
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
                   value={form.total_rooms}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setForm({...form, total_rooms: val});
+                  }}
                   required
                 />
               </div>

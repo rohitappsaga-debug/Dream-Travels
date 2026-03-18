@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Plane,
+  Image as ImageIcon,
+  MessageSquare
 } from "lucide-react";
 
 const AdminSidebar = ({ activeView, setActiveView, onLogout, isCollapsed, setIsCollapsed }) => {
@@ -25,6 +27,8 @@ const AdminSidebar = ({ activeView, setActiveView, onLogout, isCollapsed, setIsC
     { id: "bus_bookings", label: "Bus Bookings", icon: Ticket, path: "/admin/bus-bookings" },
     { id: "hotels", label: "Manage Hotels", icon: Hotel, path: "/admin/hotels" },
     { id: "hotel_bookings", label: "Hotel Bookings", icon: Bed, path: "/admin/hotel-bookings" },
+    { id: "gallery", label: "Gallery", icon: ImageIcon, path: "/admin/gallery" },
+    { id: "reviews", label: "Reviews", icon: MessageSquare, path: "/admin/reviews" },
   ];
 
   return (

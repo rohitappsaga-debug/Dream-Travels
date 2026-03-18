@@ -12,6 +12,7 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
     email: ""
   });
   const [bookingSuccess, setBookingSuccess] = useState(null);
+  const [bookingError, setBookingError] = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/get_hotel_details.php?id=${hotelId}`)
@@ -57,8 +58,9 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
     .then(data => {
       if (data.status === "success") {
         setBookingSuccess({ ...data.data, nights });
+        setBookingError(null);
       } else {
-        alert(data.message);
+        setBookingError(data.message);
       }
     });
   };
@@ -177,6 +179,11 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
               </div>
             ) : (
               <form onSubmit={handleBooking} className="booking-form">
+                {bookingError && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '1rem', borderRadius: '1rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                    {bookingError}
+                  </div>
+                )}
                 <div className="form-group">
                   <label>Full Name</label>
                   <input 
@@ -191,11 +198,16 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
                 <div className="form-group">
                   <label>Mobile Number</label>
                   <input 
-                    type="tel" 
+                    type="text" 
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="form-control"
-                    placeholder="e.g. +91 9876543210" 
+                    placeholder="e.g. 9876543210" 
                     value={passengerDetails.phone}
-                    onChange={(e) => setPassengerDetails({...passengerDetails, phone: e.target.value})}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setPassengerDetails({...passengerDetails, phone: val});
+                    }}
                     required 
                   />
                 </div>
@@ -210,14 +222,14 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
                   />
                 </div>
 
-                <div className="booking-summary-card" style={{ background: '#fff', border: '1px solid var(--gray-200)', borderLeftColor: 'var(--primary)', marginTop: '2rem' }}>
+                <div className="booking-summary-card" style={{ background: '#fff', border: '1px solid var(--gray-200)', borderLeft: '4px solid var(--primary)', marginTop: '2rem', padding: '1.25rem', borderRadius: '1rem' }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: '0.813rem', color: 'var(--gray-400)', fontWeight: 600 }}>Duration</span>
-                    <span style={{ fontSize: '0.813rem', color: 'var(--dark)', fontWeight: 700 }}>{calculateNights(searchCriteria.checkIn, searchCriteria.checkOut)} Nights</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 600 }}>Duration</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--dark)', fontWeight: 700 }}>{calculateNights(searchCriteria.checkIn, searchCriteria.checkOut)} Nights</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", paddingBottom: '1rem', borderBottom: '1px solid var(--gray-100)' }}>
-                    <span style={{ fontSize: '0.813rem', color: 'var(--gray-400)', fontWeight: 600 }}>Room ({searchCriteria.rooms})</span>
-                    <span style={{ fontSize: '0.813rem', color: 'var(--dark)', fontWeight: 700 }}>₹{selectedRoom.price_per_night * searchCriteria.rooms} / night</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 600 }}>Room ({searchCriteria.rooms})</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--dark)', fontWeight: 700 }}>₹{selectedRoom.price_per_night * searchCriteria.rooms} / night</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: '1rem', fontWeight: 800 }}>Total Payable</span>

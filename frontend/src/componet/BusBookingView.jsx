@@ -45,6 +45,7 @@ export default function BusBookingView({ searchCriteria, onClose }) {
               <p>Passenger: <strong>{bookingSuccess.passenger_name}</strong></p>
               <p>Route: <strong>{searchCriteria.source} → {searchCriteria.destination}</strong></p>
               <p>Travel Date: <strong>{searchCriteria.date}</strong></p>
+              <p>Total Amount: <strong>₹{(selectedBus.price || 750) * selectedSeats.length}</strong></p>
             </div>
           </div>
           

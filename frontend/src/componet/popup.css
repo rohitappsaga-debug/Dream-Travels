@@ -139,3 +139,78 @@ padding-left:20px;
 .hotel-details li{
 margin-bottom:6px;
 }
+
+/* ALERT POPUP */
+
+.alert-container {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.alert-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.alert-icon {
+  margin-bottom: 5px;
+}
+
+.alert-icon.success {
+  color: #28a745;
+}
+
+.alert-icon.error {
+  color: #dc3545;
+}
+
+.alert-icon.warning {
+  color: #ffc107;
+}
+
+.alert-message {
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.alert-btn {
+  background: #6a1b9a;
+  color: white;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: auto;
+  min-width: 120px;
+}
+
+.alert-btn:hover {
+  background: #4a148c;
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 8px rgba(106, 27, 154, 0.3);
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

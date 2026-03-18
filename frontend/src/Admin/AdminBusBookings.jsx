@@ -173,22 +173,17 @@ export default function AdminBusBookings({ showToast }) {
                       <AdminBadge status={b.booking_status} />
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {b.booking_status === "Confirmed" ? (
-                          <button 
-                            className="px-4 py-2 bg-rose-50 text-rose-600 text-xs font-bold rounded-xl hover:bg-rose-100 transition-all border border-rose-100" 
-                            onClick={() => handleStatusChange(b.id, "Cancelled")}
-                          >
-                            Cancel
-                          </button>
-                        ) : (
-                          <button 
-                            className="px-4 py-2 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100" 
-                            onClick={() => handleStatusChange(b.id, "Confirmed")}
-                          >
-                            Restore
-                          </button>
-                        )}
+                      <div className="flex items-center justify-end gap-2">
+                        <select
+                          value={b.booking_status ?? "Confirmed"}
+                          onChange={(e) => handleStatusChange(b.id, e.target.value)}
+                          className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500/20 text-slate-600 font-bold transition-all outline-none cursor-pointer hover:bg-white"
+                        >
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Cancelled">Cancelled</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Pending">Pending</option>
+                        </select>
                       </div>
                     </td>
                   </tr>

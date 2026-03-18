@@ -113,12 +113,17 @@ export default function AdminRooms({ hotel, onClose, showToast }) {
                   <div className="relative">
                     <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       name="price_per_night" 
                       placeholder="0.00" 
                       className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-sm"
                       value={form.price_per_night} 
-                      onChange={handleChange} 
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setForm({...form, price_per_night: val});
+                      }} 
                       required 
                     />
                   </div>
@@ -128,12 +133,17 @@ export default function AdminRooms({ hotel, onClose, showToast }) {
                   <div className="relative">
                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       name="total_rooms" 
                       placeholder="Total available" 
                       className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-sm"
                       value={form.total_rooms} 
-                      onChange={handleChange} 
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setForm({...form, total_rooms: val});
+                      }} 
                       required 
                     />
                   </div>

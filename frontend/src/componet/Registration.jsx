@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import { API_BASE_URL } from "../config";
+import { Eye, EyeOff } from "lucide-react";
+import AlertPopup from "./AlertPopup";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -9,9 +11,20 @@ export default function Register() {
     password: "",
     confirmPassword: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [alert, setAlert] = useState({ message: "", type: "" });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCloseAlert = () => {
+    const isSuccess = alert.type === "success";
+    setAlert({ message: "", type: "" });
+    if (isSuccess) {
+      window.location.href = "/login";
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -19,7 +32,7 @@ export default function Register() {
 
     // check password match
     if (formData.password !== formData.confirmPassword) {
-      alert("❌ Passwords do not match!");
+      setAlert({ message: "Passwords do not match!", type: "error" });
       return;
     }
 
@@ -46,61 +59,86 @@ export default function Register() {
       }
 
       if (result.status === "success") {
-        alert("✅ " + result.message);
+        setAlert({ message: "Registration successful!", type: "success" });
         setFormData({ username: "", email: "", password: "", confirmPassword: "" });
-        window.location.href = "/login"; // go to login after register
       } else {
-        alert("❌ " + result.message);
+        setAlert({ message: result.message, type: "error" });
       }
     } catch (err) {
       console.error("Error:", err);
-      alert("⚠️ Server error. Please check backend logs.");
+      setAlert({ message: "Server error. Please check backend logs.", type: "error" });
     }
   };
 
   return (
     <div className="auth-page">
-    <div className="auth-container">
-      <h2>📝 Register</h2>
-      <form onSubmit={handleSubmit} className="auth-form">
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email Address"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit" className="auth-btn">Register</button>
-      </form>
-      <p>
-        Already have an account? <a href="/login">Login here</a>
-      </p>
-    </div>
+      <div className="auth-container">
+        <h2>📝 Register</h2>
+        <form onSubmit={handleSubmit} className="auth-form">
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <div className="password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <div className="password-field">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <button type="submit" className="auth-btn">
+            Register
+          </button>
+        </form>
+        <p>
+          Already have an account? <a href="/login">Login here</a>
+        </p>
+      </div>
+
+      <AlertPopup
+        message={alert.message}
+        type={alert.type}
+        onClose={handleCloseAlert}
+      />
     </div>
   );
 }
