@@ -35,6 +35,11 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
 
   const handleBooking = (e) => {
     e.preventDefault();
+    if (passengerDetails.phone.length !== 10) {
+      setBookingError("Mobile number must be exactly 10 digits.");
+      return;
+    }
+
     const nights = calculateNights(searchCriteria.checkIn, searchCriteria.checkOut);
     
     const bookingData = {
@@ -83,13 +88,13 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
           <h2>Stay Confirmed!</h2>
           <p>Your luxury experience at <strong>{hotel.hotel_name}</strong> is all set.</p>
           
-          <div className="booking-summary-card" style={{ textAlign: 'left' }}>
+          <div className="booking-summary-card">
             <span className="summary-title">Reservation Details</span>
             <div className="summary-details">
-              <p>Booking ID: <strong>#{bookingSuccess.booking_id}</strong></p>
-              <p>Duration: <strong>{searchCriteria.checkIn} to {searchCriteria.checkOut} ({bookingSuccess.nights} nights)</strong></p>
-              <p>Room Type: <strong>{selectedRoom.room_type}</strong></p>
-              <p>Total Paid: <strong>₹{bookingSuccess.total_price}</strong></p>
+              <p><span>Booking ID</span> <strong>#{bookingSuccess.booking_id}</strong></p>
+              <p><span>Duration</span> <strong>{searchCriteria.checkIn} to {searchCriteria.checkOut} ({bookingSuccess.nights} nights)</strong></p>
+              <p><span>Room Type</span> <strong>{selectedRoom.room_type}</strong></p>
+              <p><span>Total Paid</span> <strong>₹{bookingSuccess.total_price}</strong></p>
             </div>
           </div>
           
@@ -134,12 +139,16 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
               {hotel.location}
             </p>
             
-            <span className="summary-title" style={{ marginBottom: '0.75rem' }}>Popular Amenities</span>
-            <div className="amenities-container">
-              {hotel.amenities.split(',').map(a => (
-                <span key={a} className="amenity-tag">{a.trim()}</span>
-              ))}
-            </div>
+            {hotel.amenities && (
+              <>
+                <span className="summary-title" style={{ marginBottom: '0.75rem' }}>Popular Amenities</span>
+                <div className="amenities-container">
+                  {hotel.amenities.split(',').map((a, index) => (
+                    <span key={index} className="amenity-tag">{a.trim()}</span>
+                  ))}
+                </div>
+              </>
+            )}
 
             <span className="summary-title" style={{ marginBottom: '1rem' }}>Available Rooms</span>
             <div className="room-options">
@@ -173,9 +182,9 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
             <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem' }}>Guest Details</h3>
             
             {!selectedRoom ? (
-              <div className="no-room-selected" style={{ textAlign: "center", padding: "4rem 0", color: "var(--gray-400)" }}>
-                <Info size={48} style={{ margin: '0 auto 1.5rem', opacity: 0.5 }} />
-                <p>Select a preferred room type to continue with your booking</p>
+              <div className="no-room-selected">
+                <Info size={48} style={{ opacity: 0.2, marginBottom: '1.5rem' }} />
+                <p style={{ maxWidth: '250px', margin: '0 auto', lineHeight: 1.6 }}>Choose a room type from the list to begin your reservation</p>
               </div>
             ) : (
               <form onSubmit={handleBooking} className="booking-form">
@@ -200,12 +209,14 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
                   <input 
                     type="text" 
                     inputMode="numeric"
-                    pattern="[0-9]*"
+                    pattern="[0-9]{10}"
+                    minLength="10"
+                    maxLength="10"
                     className="form-control"
                     placeholder="e.g. 9876543210" 
                     value={passengerDetails.phone}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                       setPassengerDetails({...passengerDetails, phone: val});
                     }}
                     required 

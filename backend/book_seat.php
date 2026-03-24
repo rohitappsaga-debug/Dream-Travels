@@ -23,6 +23,11 @@ if (empty($bus_id) || empty($route_id) || empty($seat_numbers) || empty($passeng
     exit;
 }
 
+if (strlen($phone) !== 10 || !ctype_digit($phone)) {
+    echo json_encode(['success' => false, 'message' => 'Phone number must be exactly 10 digits.']);
+    exit;
+}
+
 if (!is_array($seat_numbers) || count($seat_numbers) === 0) {
     echo json_encode(['success' => false, 'message' => 'No seats selected.']);
     exit;

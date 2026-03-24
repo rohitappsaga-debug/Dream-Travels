@@ -36,16 +36,16 @@ export default function BusBookingView({ searchCriteria, onClose }) {
           <h2>Booking Successful!</h2>
           <p>Your journey is confirmed. Thank you for choosing Dream Travellers!</p>
           
-          <div className="booking-summary-card" style={{ textAlign: "left" }}>
+          <div className="booking-summary-card">
             <span className="summary-title">Ticket Information</span>
             <div className="summary-details">
-              <p>Booking ID: <strong>#{bookingSuccess.booking_id}</strong></p>
-              <p>Bus Title: <strong>{selectedBus.bus_name}</strong></p>
-              <p>Seat Numbers: <strong>{selectedSeats.join(', ')}</strong></p>
-              <p>Passenger: <strong>{bookingSuccess.passenger_name}</strong></p>
-              <p>Route: <strong>{searchCriteria.source} → {searchCriteria.destination}</strong></p>
-              <p>Travel Date: <strong>{searchCriteria.date}</strong></p>
-              <p>Total Amount: <strong>₹{(selectedBus.price || 750) * selectedSeats.length}</strong></p>
+              <p><span>Booking ID</span> <strong>#{bookingSuccess.booking_id}</strong></p>
+              <p><span>Bus Title</span> <strong>{selectedBus.bus_name}</strong></p>
+              <p><span>Seat Numbers</span> <strong>{selectedSeats.join(', ')}</strong></p>
+              <p><span>Passenger</span> <strong>{bookingSuccess.passenger_name}</strong></p>
+              <p><span>Route</span> <strong>{searchCriteria.source} → {searchCriteria.destination}</strong></p>
+              <p><span>Travel Date</span> <strong>{searchCriteria.date}</strong></p>
+              <p><span>Total Amount</span> <strong>₹{(selectedBus.price || 750) * selectedSeats.length}</strong></p>
             </div>
           </div>
           

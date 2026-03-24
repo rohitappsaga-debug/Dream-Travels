@@ -86,6 +86,11 @@ export default function Book() {
       return;
     }
 
+    if (customerPhone.length !== 10) {
+      alert("❌ Mobile number must be exactly 10 digits.");
+      return;
+    }
+
     const todayStr = new Date().toISOString().split("T")[0];
     if (date < todayStr) {
       alert("❌ Travel date cannot be in the past.");
@@ -148,29 +153,25 @@ export default function Book() {
       <div className="book-hub-container">
         <Navbar />
         <div className="booking-overlay">
-          <div className="booking-modal success-modal" style={{ maxWidth: '500px', margin: '40px auto' }}>
-            <div className="success-icon-wrapper" style={{ background: 'var(--primary-light)', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
-              <div style={{ background: 'var(--primary)', color: 'white', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle size={40} />
-              </div>
+          <div className="booking-modal success-modal">
+            <div className="success-icon-wrapper">
+              <CheckCircle size={48} />
             </div>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '10px' }}>Booking Successful!</h2>
-            <p style={{ color: 'var(--gray-500)', marginBottom: '30px' }}>Your dream vacation is confirmed. Happy travels!</p>
+            <h2>Booking Successful!</h2>
+            <p>Your dream vacation is confirmed. Happy travels!</p>
             
-            <div className="booking-summary-card" style={{ textAlign: "left", background: 'var(--light)', padding: '20px', borderRadius: '15px', marginBottom: '30px' }}>
-              <span className="summary-title" style={{ fontSize: '0.9rem', marginBottom: '15px' }}>Package Details</span>
+            <div className="booking-summary-card">
+              <span className="summary-title">Package Details</span>
               <div className="summary-details">
-                <p>Booking ID: <strong>#{bookingSuccess.booking_id}</strong></p>
-                <p>Package: <strong>{bookingSuccess.package_title}</strong></p>
-                <p>Travel Date: <strong>{bookingSuccess.travel_date}</strong></p>
-                <p>Passengers: <strong>{bookingSuccess.passenger_count}</strong></p>
-                <p style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--gray-200)', fontSize: '1.1rem' }}>
-                  Total Amount Paid: <strong style={{ color: 'var(--primary)' }}>₹{bookingSuccess.total_price}</strong>
-                </p>
+                <p><span>Booking ID</span> <strong>#{bookingSuccess.booking_id}</strong></p>
+                <p><span>Package</span> <strong>{bookingSuccess.package_title}</strong></p>
+                <p><span>Travel Date</span> <strong>{bookingSuccess.travel_date}</strong></p>
+                <p><span>Passengers</span> <strong>{bookingSuccess.passenger_count}</strong></p>
+                <p><span>Total Amount Paid</span> <strong>₹{bookingSuccess.total_price}</strong></p>
               </div>
             </div>
             
-            <button className="btn-primary" style={{ width: '100%' }} onClick={() => navigate("/home")}>
+            <button className="btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={() => navigate("/home")}>
               Back to Home
             </button>
           </div>
@@ -233,12 +234,14 @@ export default function Book() {
                   <input
                     type="text"
                     inputMode="numeric"
-                    pattern="[0-9]*"
+                    pattern="[0-9]{10}"
+                    minLength="10"
+                    maxLength="10"
                     className="form-control"
                     placeholder="e.g. 9876543210"
                     value={customerPhone}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                       setCustomerPhone(val);
                     }}
                     required

@@ -13,6 +13,12 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.phone.length !== 10) {
+      setError("Phone number must be exactly 10 digits.");
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -100,15 +106,17 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
             <input 
               type="text" 
               inputMode="numeric"
-              pattern="[0-9]*"
+              pattern="[0-9]{10}"
+              minLength="10"
+              maxLength="10"
               className="form-control"
               required 
               value={form.phone}
               onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                 setForm({...form, phone: val});
               }}
-              placeholder="Enter phone number"
+              placeholder="Enter 10-digit phone number"
             />
           </div>
         </div>

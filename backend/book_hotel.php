@@ -25,6 +25,11 @@ if ($hotel_id <= 0 || $room_id <= 0 || empty($guest_name) || empty($phone) || em
     exit;
 }
 
+if (strlen($phone) !== 10 || !ctype_digit($phone)) {
+    echo json_encode(['status' => 'error', 'message' => 'Mobile number must be exactly 10 digits.']);
+    exit;
+}
+
 // 1. Calculate nights
 $date1 = new DateTime($check_in);
 $date2 = new DateTime($check_out);

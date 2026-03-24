@@ -58,6 +58,14 @@ if (count($missing) > 0) {
     exit;
 }
 
+if ($customer_phone !== '' && (strlen($customer_phone) !== 10 || !ctype_digit($customer_phone))) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Mobile number must be exactly 10 digits."
+    ]);
+    exit;
+}
+
 // Validate travel_date format (MySQL DATE expects YYYY-MM-DD)
 if (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $travel_date)) {
     echo json_encode([
