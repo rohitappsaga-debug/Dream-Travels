@@ -19,7 +19,7 @@ export default function Book() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [date, setDate] = useState("");
   const [passengers, setPassengers] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState("manual");
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [paymentDetails, setPaymentDetails] = useState({});
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [packages, setPackages] = useState([]);

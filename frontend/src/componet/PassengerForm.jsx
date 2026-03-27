@@ -8,7 +8,7 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
     passenger_name: "",
     phone: "",
     email: "",
-    paymentMethod: "manual",
+    paymentMethod: "razorpay",
     paymentDetails: {}
   });
   const [submitting, setSubmitting] = useState(false);

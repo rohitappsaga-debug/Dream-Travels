@@ -14,7 +14,7 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
     phone: "",
     email: ""
   });
-  const [paymentMethod, setPaymentMethod] = useState("manual");
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [paymentDetails, setPaymentDetails] = useState({});
   const [bookingSuccess, setBookingSuccess] = useState(null);
   const [bookingError, setBookingError] = useState(null);
