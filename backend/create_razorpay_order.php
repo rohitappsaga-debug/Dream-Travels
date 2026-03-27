@@ -12,6 +12,11 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
+if (!function_exists('curl_init')) {
+    echo json_encode(["success" => false, "message" => "PHP CURL extension is not enabled. Please enable it in php.ini."]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -113,10 +118,17 @@ try {
 
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
     curl_close($ch);
 
+    if ($response === false) {
+        throw new Exception("CURL Error: " . $curl_error);
+    }
+
     if ($http_code !== 200) {
-        throw new Exception("Razorpay Order Creation Failed: " . $response);
+        $error_data = json_decode($response, true);
+        $error_msg = $error_data['error']['description'] ?? $response;
+        throw new Exception("Razorpay API Error ($http_code): " . $error_msg);
     }
 
     $razorpay_order = json_decode($response, true);
