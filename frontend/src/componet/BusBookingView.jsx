@@ -3,6 +3,8 @@ import { API_BASE_URL } from "../config";
 import BusSeatSelector from "./BusSeatSelector";
 import PassengerForm from "./PassengerForm";
 import { Bus as BusIcon, Info, Users, CheckCircle, ChevronLeft } from "lucide-react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function BusBookingView({ searchCriteria, onClose }) {
   const [buses, setBuses] = useState([]);
@@ -26,6 +28,23 @@ export default function BusBookingView({ searchCriteria, onClose }) {
     setBookingSuccess(details);
   };
 
+  const handleDownloadPDF = () => {
+    const input = document.getElementById('bus-ticket-summary');
+    html2canvas(input, { scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.setProperties({
+        title: `Bus_Ticket_${bookingSuccess.booking_id}`,
+        subject: 'Bus Booking Confirmation',
+        author: 'Dream Travelers'
+      });
+      pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+      pdf.save(`Bus_Ticket_${bookingSuccess.booking_id}.pdf`);
+    });
+  };
+
   if (bookingSuccess) {
     return (
       <div className="booking-overlay">
@@ -36,7 +55,7 @@ export default function BusBookingView({ searchCriteria, onClose }) {
           <h2>Booking Successful!</h2>
           <p>Your journey is confirmed. Thank you for choosing Dream Travellers!</p>
           
-          <div className="booking-summary-card">
+          <div className="booking-summary-card" id="bus-ticket-summary">
             <span className="summary-title">Ticket Information</span>
             <div className="summary-details">
               <p><span>Booking ID</span> <strong>#{bookingSuccess.booking_id}</strong></p>
@@ -49,6 +68,9 @@ export default function BusBookingView({ searchCriteria, onClose }) {
             </div>
           </div>
           
+          <button className="btn-primary" style={{ width: '100%', marginBottom: '1rem', background: '#10b981' }} onClick={handleDownloadPDF}>
+            Download Ticket (PDF)
+          </button>
           <button className="btn-primary" style={{ width: '100%' }} onClick={onClose}>
             Back to Home
           </button>

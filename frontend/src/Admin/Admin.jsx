@@ -6,7 +6,7 @@ import AdminBuses from "./AdminBuses";
 import AdminBusBookings from "./AdminBusBookings";
 import AdminHotels from "./AdminHotels";
 import AdminHotelBookings from "./AdminHotelBookings";
-import AdminGallery from "./AdminGallery";
+
 import AdminReviews from "./AdminReviews";
 import AdminLayout from "./components/AdminLayout";
 import AdminStatCard from "./components/AdminStatCard";
@@ -29,7 +29,7 @@ const VIEW_BUSES = "buses";
 const VIEW_BUS_BOOKINGS = "bus_bookings";
 const VIEW_HOTELS = "hotels";
 const VIEW_HOTEL_BOOKINGS = "hotel_bookings";
-const VIEW_GALLERY = "gallery";
+
 const VIEW_REVIEWS = "reviews";
 
 export default function Admin({ initialView = VIEW_DASHBOARD }) {
@@ -1097,9 +1097,7 @@ export default function Admin({ initialView = VIEW_DASHBOARD }) {
         <AdminHotelBookings showToast={showToast} />
       )}
 
-      {activeView === VIEW_GALLERY && (
-        <AdminGallery showToast={showToast} />
-      )}
+
 
       {activeView === VIEW_REVIEWS && (
         <AdminReviews showToast={showToast} />

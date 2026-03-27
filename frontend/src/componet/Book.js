@@ -4,19 +4,23 @@ import { Plane, Bus, Hotel, CheckCircle } from "lucide-react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { API_BASE_URL } from "../config";
 import BusSearchSection from "./BusSearchSection";
 import BusBookingView from "./BusBookingView";
 import HotelSearchSection from "./HotelSearchSection";
 import HotelList from "./HotelList";
 import HotelBookingView from "./HotelBookingView";
+import PaymentSection from "./PaymentSection";
 
 export default function Book() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [date, setDate] = useState("");
   const [passengers, setPassengers] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState("credit-card");
+  const [paymentMethod, setPaymentMethod] = useState("manual");
+  const [paymentDetails, setPaymentDetails] = useState({});
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [packages, setPackages] = useState([]);
   const [userId, setUserId] = useState(null);
@@ -37,13 +41,21 @@ export default function Book() {
 
   useEffect(() => {
     const pkg = JSON.parse(localStorage.getItem("selectedPackage"));
-    if (pkg) setSelectedPackage(pkg);
+    if (pkg) {
+      setSelectedPackage(pkg);
+      setActiveTab("package");
+    }
 
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
       setUserId(user.id);
       if (user.name) setCustomerName(user.name);
     }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
 
     fetch(`${API_BASE_URL}/get_packages.php`)
       .then((res) => res.text())
@@ -98,22 +110,84 @@ export default function Book() {
     }
 
     const bookingData = {
+      type: 'package', // Added for the unified backend
       user_id: Number(userId),
       customer_name: customerName.trim(),
       customer_phone: customerPhone.trim(),
       travel_date: date.trim(),
       passengers: Number(passengers) || 1,
-      payment_method: "Pay at Counter", // Default payment method after UI removal
+      payment_method: paymentMethod,
+      payment_details: JSON.stringify(paymentDetails),
       package_id: pkgId,
       package_title: selectedPackage.title || "",
       package_price: selectedPackage.price != null ? Number(selectedPackage.price) : 0,
-      total_amount: (selectedPackage.price != null ? Number(selectedPackage.price) : 0) * (Number(passengers) || 1)
+      amount: (selectedPackage.price != null ? Number(selectedPackage.price) : 0) * (Number(passengers) || 1)
     };
 
-    // log the payload for debugging network errors
     console.debug("booking payload:", bookingData);
 
     try {
+      if (paymentMethod === 'razorpay') {
+        const orderRes = await fetch(`${API_BASE_URL}/create_razorpay_order.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+        const orderResult = await orderRes.json();
+        
+        if (!orderResult.success) {
+          alert("❌ Failed to create payment order: " + orderResult.message);
+          return;
+        }
+
+        const options = {
+          key: orderResult.key_id,
+          amount: orderResult.amount * 100,
+          currency: "INR",
+          name: "Dream Travels",
+          description: `Booking for ${selectedPackage.title}`,
+          order_id: orderResult.razorpay_order_id,
+          handler: async function (response) {
+            // Verify payment
+            const verifyRes = await fetch(`${API_BASE_URL}/verify_razorpay_payment.php`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...response,
+                booking_id: orderResult.booking_id,
+                type: 'package'
+              }),
+            });
+            const verifyResult = await verifyRes.json();
+            if (verifyResult.success) {
+              setBookingSuccess({
+                booking_id: orderResult.booking_id,
+                package_title: selectedPackage.title,
+                total_price: selectedPackage.price * passengers,
+                travel_date: date,
+                passenger_count: passengers
+              });
+              localStorage.removeItem("selectedPackage");
+            } else {
+              alert("❌ Payment verification failed: " + verifyResult.message);
+            }
+          },
+          prefill: {
+            name: customerName,
+            contact: customerPhone
+          },
+          theme: { color: "#3B82F6" }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          alert("❌ Payment failed: " + response.error.description);
+        });
+        rzp.open();
+        return;
+      }
+
+      // Fallback for other payment methods (like legacy dummy logic)
       const res = await fetch(`${API_BASE_URL}/book_package.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -148,6 +222,23 @@ export default function Book() {
     }
   };
 
+  const handleDownloadPDF = () => {
+    const input = document.getElementById('booking-summary');
+    html2canvas(input, { scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.setProperties({
+        title: `Dream_Travelers_Ticket_${bookingSuccess.booking_id}`,
+        subject: 'Booking Confirmation Ticket',
+        author: 'Dream Travelers'
+      });
+      pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+      pdf.save(`Dream_Travelers_Ticket_${bookingSuccess.booking_id}.pdf`);
+    });
+  };
+
   if (bookingSuccess) {
     return (
       <div className="book-hub-container">
@@ -160,7 +251,7 @@ export default function Book() {
             <h2>Booking Successful!</h2>
             <p>Your dream vacation is confirmed. Happy travels!</p>
             
-            <div className="booking-summary-card">
+            <div className="booking-summary-card" id="booking-summary">
               <span className="summary-title">Package Details</span>
               <div className="summary-details">
                 <p><span>Booking ID</span> <strong>#{bookingSuccess.booking_id}</strong></p>
@@ -171,6 +262,9 @@ export default function Book() {
               </div>
             </div>
             
+            <button className="btn-primary" style={{ width: '100%', marginTop: '1rem', background: '#10b981' }} onClick={handleDownloadPDF}>
+              Download Ticket (PDF)
+            </button>
             <button className="btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={() => navigate("/home")}>
               Back to Home
             </button>
@@ -321,6 +415,15 @@ export default function Book() {
                     </div>
                   </div>
                 )}
+
+                <PaymentSection 
+                  method={paymentMethod}
+                  details={paymentDetails}
+                  onChange={(m, d) => {
+                    setPaymentMethod(m);
+                    setPaymentDetails(d);
+                  }}
+                />
 
                 <button type="submit" className="btn-primary" style={{ marginTop: '1.5rem' }}>
                   Confirm Booking

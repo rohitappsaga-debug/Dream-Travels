@@ -9,7 +9,6 @@ import { API_BASE_URL } from "../config";
 export default function Home() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activePackageIndex, setActivePackageIndex] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   useEffect(() => {
@@ -87,7 +86,21 @@ export default function Home() {
                 <img src={dest.img} alt={dest.name} />
                 <div className="dest-overlay">
                   <h3>{dest.name}</h3>
-                  <button className="view-pkg-btn">View Packages</button>
+                  <button 
+                    className="book-now-btn" 
+                    onClick={() => {
+                      const matchingPkg = packages.find(p => 
+                        p.title.toLowerCase().includes(dest.name.toLowerCase()) || 
+                        dest.name.toLowerCase().includes(p.title.toLowerCase())
+                      );
+                      if (matchingPkg) {
+                        localStorage.setItem("selectedPackage", JSON.stringify(matchingPkg));
+                      }
+                      window.location.href = "/book";
+                    }}
+                  >
+                    Book Now
+                  </button>
                 </div>
               </div>
             ))}
@@ -127,16 +140,27 @@ export default function Home() {
                     <p className="card-desc">
                       {pkg.description || "Experience the magic of this destination with our all-inclusive package."}
                     </p>
-                    <div className="card-footer">
-                      <div className="price-box">
-                        <span className="price-label">Starts from</span>
-                        <span className="price-value">₹{pkg.price || "15,999"}</span>
+                    <div className="card-footer" style={{ flexDirection: 'column', gap: '1rem', alignItems: 'stretch' }}>
+                      <div className="price-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="price-box">
+                          <span className="price-label">Starts from</span>
+                          <span className="price-value">₹{pkg.price || "15,999"}</span>
+                        </div>
+                        <button
+                          className="view-details-btn"
+                          onClick={() => setSelectedPackage(pkg)}
+                        >
+                          View Details
+                        </button>
                       </div>
                       <button
-                        className="view-details-btn"
-                        onClick={() => setSelectedPackage(pkg)}
+                        className="book-now-btn-premium"
+                        onClick={() => {
+                          localStorage.setItem("selectedPackage", JSON.stringify(pkg));
+                          window.location.href = "/book";
+                        }}
                       >
-                        View Details
+                        Book Now
                       </button>
                     </div>
                   </div>

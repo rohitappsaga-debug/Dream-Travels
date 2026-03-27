@@ -11,6 +11,7 @@ if (!$data) {
 }
 
 $hotel_id = intval($data['hotel_id'] ?? 0);
+$user_id = intval($data['user_id'] ?? 0);
 $room_id = intval($data['room_id'] ?? 0);
 $guest_name = $conn->real_escape_string($data['guest_name'] ?? '');
 $phone = $conn->real_escape_string($data['phone'] ?? '');
@@ -19,6 +20,8 @@ $check_in = $conn->real_escape_string($data['check_in'] ?? '');
 $check_out = $conn->real_escape_string($data['check_out'] ?? '');
 $num_guests = intval($data['num_guests'] ?? 1);
 $num_rooms = intval($data['num_rooms'] ?? 1);
+$payment_method = $conn->real_escape_string($data['payment_method'] ?? '');
+$payment_details = $conn->real_escape_string($data['payment_details'] ?? '');
 
 if ($hotel_id <= 0 || $room_id <= 0 || empty($guest_name) || empty($phone) || empty($check_in) || empty($check_out)) {
     echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
@@ -75,8 +78,8 @@ if ($num_rooms > $total_available) {
 $total_price = $room['price_per_night'] * $nights * $num_rooms;
 
 // 4. Create booking
-$ins_sql = "INSERT INTO hotel_bookings (hotel_id, room_id, guest_name, phone, email, check_in, check_out, num_guests, num_rooms, total_price) 
-            VALUES ($hotel_id, $room_id, '$guest_name', '$phone', '$email', '$check_in', '$check_out', $num_guests, $num_rooms, $total_price)";
+$ins_sql = "INSERT INTO hotel_bookings (hotel_id, user_id, room_id, guest_name, phone, email, check_in, check_out, num_guests, num_rooms, total_price, payment_method, payment_details) 
+            VALUES ($hotel_id, $user_id, $room_id, '$guest_name', '$phone', '$email', '$check_in', '$check_out', $num_guests, $num_rooms, $total_price, '$payment_method', '$payment_details')";
 
 if ($conn->query($ins_sql)) {
     echo json_encode([

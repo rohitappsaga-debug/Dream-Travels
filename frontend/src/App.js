@@ -4,10 +4,11 @@ import ProtectedRoute from "./componet/ProtectedRoute";
 import Bodycard from "./componet/Home.js";
 import About from "./componet/About.jsx";
 import Services from "./componet/Services.jsx";
-import Book from "./componet/Book.js";
+import Book from "./componet/Book";
+import MyBookings from "./componet/MyBookings";
 import Package from "./componet/Package.jsx";
 import PackageDetail from "./componet/PackageDetail.jsx";
-import Gallery from "./componet/Gallery.jsx";
+
 import ScrollToTop from "./componet/ScrollToTop.jsx";
 
 // Auth pages
@@ -15,7 +16,7 @@ import Login from "./componet/Login.jsx";
 import Register from "./componet/Registration.jsx";
 
 // Admin page
-import Admin from "./Admin/Admin.jsx";
+import Admin from "./Admin/Admin";
 
 function App() {
   return (
@@ -27,6 +28,16 @@ function App() {
         {/* Auth routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/book/:pkgId" element={<Book />} />
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/admin" element={<Admin />} />
 
         {/* Protected pages */}
         <Route
@@ -77,14 +88,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/gallery"
-          element={
-            <ProtectedRoute>
-              <Gallery />
-            </ProtectedRoute>
-          }
-        />
+
 
         {/* Admin routes (only accessible to Admin role) */}
         <Route
@@ -151,14 +155,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin/gallery"
-          element={
-            <ProtectedRoute role="Admin">
-              <Admin initialView="gallery" />
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/admin/reviews"
           element={

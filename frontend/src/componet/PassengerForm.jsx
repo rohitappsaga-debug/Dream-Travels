@@ -1,15 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { API_BASE_URL } from "../config";
 import { User, Phone, Mail, AlertCircle } from "lucide-react";
+import PaymentSection from "./PaymentSection";
 
 export default function PassengerForm({ bus, routeId, seatNumbers, date, onComplete }) {
   const [form, setForm] = useState({
     passenger_name: "",
     phone: "",
-    email: ""
+    email: "",
+    paymentMethod: "manual",
+    paymentDetails: {}
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,15 +32,82 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
     setSubmitting(true);
     setError("");
 
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const userId = user?.id;
+
     const bookingData = {
+      type: 'bus',
       bus_id: bus.id,
+      user_id: userId ? Number(userId) : 0,
       route_id: routeId,
       seat_numbers: seatNumbers, // Array
       travel_date: date,
-      ...form
+      passenger_name: form.passenger_name,
+      phone: form.phone,
+      email: form.email,
+      payment_method: form.paymentMethod,
+      payment_details: JSON.stringify(form.paymentDetails),
+      amount: (bus.price || 750) * seatNumbers.length
     };
 
     try {
+      if (form.paymentMethod === 'razorpay') {
+        const orderRes = await fetch(`${API_BASE_URL}/create_razorpay_order.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+        const orderResult = await orderRes.json();
+        
+        if (!orderResult.success) {
+          setError("Failed to create payment order: " + orderResult.message);
+          return;
+        }
+
+        const options = {
+          key: orderResult.key_id,
+          amount: orderResult.amount * 100,
+          currency: "INR",
+          name: "Dream Travels",
+          description: `Bus Booking - ${bus.bus_name}`,
+          order_id: orderResult.razorpay_order_id,
+          handler: async function (response) {
+            const verifyRes = await fetch(`${API_BASE_URL}/verify_razorpay_payment.php`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...response,
+                booking_id: orderResult.booking_id,
+                type: 'bus'
+              }),
+            });
+            const verifyResult = await verifyRes.json();
+            if (verifyResult.success) {
+              onComplete({
+                ...bookingData,
+                booking_id: orderResult.booking_id
+              });
+            } else {
+              setError("Payment verification failed: " + verifyResult.message);
+            }
+          },
+          prefill: {
+            name: form.passenger_name,
+            contact: form.phone,
+            email: form.email
+          },
+          theme: { color: "#3B82F6" }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          setError("Payment failed: " + response.error.description);
+        });
+        rzp.open();
+        return;
+      }
+
       const res = await fetch(`${API_BASE_URL}/book_seat.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -49,7 +126,9 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
     } catch (err) {
       setError("Server error. Please try again later.");
     } finally {
-      setSubmitting(false);
+      if (form.paymentMethod !== 'razorpay') {
+          setSubmitting(false);
+      }
     }
   };
 
@@ -141,6 +220,12 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
             <span>{error}</span>
           </div>
         )}
+
+        <PaymentSection 
+          method={form.paymentMethod}
+          details={form.paymentDetails}
+          onChange={(m, d) => setForm({ ...form, paymentMethod: m, paymentDetails: d })}
+        />
 
         <button 
           type="submit" 

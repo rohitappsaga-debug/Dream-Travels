@@ -22,8 +22,8 @@ function PackagePopup({ data, onClose }) {
   ];
 
   const handleBookNow = () => {
-    // Home popup packages have no database id; send user to Packages page to pick a bookable package
-    navigate("/package");
+    localStorage.setItem("selectedPackage", JSON.stringify(data));
+    navigate("/book");
     onClose();
   };
 

@@ -41,6 +41,7 @@ $payment_method  = trim((string) ($data['payment_method'] ?? ''));
 $package_id      = isset($data['package_id']) ? (int) $data['package_id'] : null;
 $package_title   = trim((string) ($data['package_title'] ?? ''));
 $package_price   = isset($data['package_price']) ? (float) $data['package_price'] : null;
+$payment_details = trim((string) ($data['payment_details'] ?? ''));
 
 $missing = [];
 if (!$user_id) $missing[] = 'user_id';
@@ -75,8 +76,8 @@ if (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $travel_date)) {
     exit;
 }
 
-$stmt = $conn->prepare("INSERT INTO bookings_data (customer_name, customer_phone, user_id, travel_date, passengers, payment_method, package_id, package_title, package_price, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')");
-$stmt->bind_param("ssisisisd", $customer_name, $customer_phone, $user_id, $travel_date, $passengers, $payment_method, $package_id, $package_title, $package_price);
+$stmt = $conn->prepare("INSERT INTO bookings_data (customer_name, customer_phone, user_id, travel_date, passengers, payment_method, payment_details, package_id, package_title, package_price, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')");
+$stmt->bind_param("ssisisisds", $customer_name, $customer_phone, $user_id, $travel_date, $passengers, $payment_method, $payment_details, $package_id, $package_title, $package_price);
 
 if (!$stmt->execute()) {
     $stmt->close();

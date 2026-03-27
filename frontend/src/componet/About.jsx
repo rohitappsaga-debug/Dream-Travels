@@ -30,6 +30,17 @@ export default function About() {
 
   useEffect(() => {
     fetchReviews();
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user && user.name) {
+          setForm(prev => ({ ...prev, name: user.name }));
+        }
+      } catch (err) {
+        console.error("Error parsing user from localStorage:", err);
+      }
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -229,9 +240,19 @@ export default function About() {
                   type="text" 
                   placeholder="Your Name"
                   required
-                  style={{ width: '100%', padding: '1rem 1.25rem', borderRadius: '1rem', border: '1.5px solid var(--gray-200)', outline: 'none', transition: 'all 0.2s' }}
+                  style={{ 
+                    width: '100%', 
+                    padding: '1rem 1.25rem', 
+                    borderRadius: '1rem', 
+                    border: '1.5px solid var(--gray-200)', 
+                    outline: 'none', 
+                    transition: 'all 0.2s',
+                    backgroundColor: localStorage.getItem("user") ? 'var(--gray-100)' : 'white',
+                    cursor: localStorage.getItem("user") ? 'not-allowed' : 'text'
+                  }}
                   value={form.name}
                   onChange={(e) => setForm({...form, name: e.target.value})}
+                  readOnly={!!localStorage.getItem("user")}
                 />
               </div>
 

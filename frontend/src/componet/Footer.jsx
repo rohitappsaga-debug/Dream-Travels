@@ -33,7 +33,7 @@ export default function Footer() {
                 <li><NavLink to="/home">Home</NavLink></li>
                 <li><NavLink to="/book">Book Trip</NavLink></li>
                 <li><NavLink to="/package">Packages</NavLink></li>
-                <li><NavLink to="/gallery">Gallery</NavLink></li>
+
                 <li><NavLink to="/about">About Us</NavLink></li>
               </ul>
             </div>
@@ -71,13 +71,13 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      
+
       <div className="footer-bottom">
         <div className="footer-container">
           <div className="footer-bottom-content">
             <p>&copy; {new Date().getFullYear()} Dream Travelers. All Rights Reserved.</p>
             <div className="footer-credit">
-              Designed By <a href="#">Group 06</a>
+              Designed By <a href="#">Group 52</a>
             </div>
           </div>
         </div>

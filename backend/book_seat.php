@@ -11,12 +11,15 @@ if (!$data) {
 }
 
 $bus_id = $data['bus_id'] ?? '';
+$user_id = $data['user_id'] ?? 0;
 $route_id = $data['route_id'] ?? '';
 $seat_numbers = $data['seat_numbers'] ?? []; // Array of seats
 $passenger_name = $data['passenger_name'] ?? '';
 $phone = $data['phone'] ?? '';
 $email = $data['email'] ?? '';
 $travel_date = $data['travel_date'] ?? '';
+$payment_method = $data['payment_method'] ?? '';
+$payment_details = $data['payment_details'] ?? '';
 
 if (empty($bus_id) || empty($route_id) || empty($seat_numbers) || empty($passenger_name) || empty($phone) || empty($travel_date)) {
     echo json_encode(['success' => false, 'message' => 'All required fields must be filled.']);
@@ -65,10 +68,10 @@ try {
     }
 
     // 3. Process Bookings
-    $stmt = $conn->prepare("INSERT INTO bus_bookings (bus_id, route_id, seat_number, passenger_name, phone, email, travel_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO bus_bookings (bus_id, user_id, route_id, seat_number, passenger_name, phone, email, travel_date, payment_method, payment_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
     foreach ($seat_numbers as $seat) {
-        $stmt->bind_param("iiissss", $bus_id, $route_id, $seat, $passenger_name, $phone, $email, $travel_date);
+        $stmt->bind_param("iiiissssss", $bus_id, $user_id, $route_id, $seat, $passenger_name, $phone, $email, $travel_date, $payment_method, $payment_details);
         if (!$stmt->execute()) {
             throw new Exception("Error booking seat $seat: " . $stmt->error);
         }

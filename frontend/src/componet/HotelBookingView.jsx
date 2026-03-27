@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
 import { MapPin, Star, CheckCircle, Info, ChevronLeft } from "lucide-react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import PaymentSection from "./PaymentSection";
 
 export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
   const [hotel, setHotel] = useState(null);
@@ -11,8 +14,18 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
     phone: "",
     email: ""
   });
+  const [paymentMethod, setPaymentMethod] = useState("manual");
+  const [paymentDetails, setPaymentDetails] = useState({});
   const [bookingSuccess, setBookingSuccess] = useState(null);
   const [bookingError, setBookingError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/get_hotel_details.php?id=${hotelId}`)
@@ -33,17 +46,26 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
     return diffDays > 0 ? diffDays : 1;
   };
 
-  const handleBooking = (e) => {
+  const handleBooking = async (e) => {
     e.preventDefault();
     if (passengerDetails.phone.length !== 10) {
       setBookingError("Mobile number must be exactly 10 digits.");
       return;
     }
 
+    setSubmitting(true);
+    setBookingError(null);
+
     const nights = calculateNights(searchCriteria.checkIn, searchCriteria.checkOut);
+    const amount = selectedRoom.price_per_night * nights * searchCriteria.rooms;
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const userId = user?.id;
     
     const bookingData = {
+      type: 'hotel',
       hotel_id: hotel.id,
+      user_id: userId ? Number(userId) : 0,
       room_id: selectedRoom.id,
       guest_name: passengerDetails.name,
       phone: passengerDetails.phone,
@@ -51,22 +73,102 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
       check_in: searchCriteria.checkIn,
       check_out: searchCriteria.checkOut,
       num_guests: searchCriteria.guests,
-      num_rooms: searchCriteria.rooms
+      num_rooms: searchCriteria.rooms,
+      payment_method: paymentMethod,
+      payment_details: JSON.stringify(paymentDetails),
+      amount: amount
     };
 
-    fetch(`${API_BASE_URL}/book_hotel.php`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bookingData)
-    })
-    .then(res => res.json())
-    .then(data => {
+    try {
+      if (paymentMethod === 'razorpay') {
+        const orderRes = await fetch(`${API_BASE_URL}/create_razorpay_order.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+        const orderResult = await orderRes.json();
+        
+        if (!orderResult.success) {
+          setBookingError("Failed to create payment order: " + orderResult.message);
+          return;
+        }
+
+        const options = {
+          key: orderResult.key_id,
+          amount: orderResult.amount * 100,
+          currency: "INR",
+          name: "Dream Travels",
+          description: `Hotel Booking - ${hotel.hotel_name}`,
+          order_id: orderResult.razorpay_order_id,
+          handler: async function (response) {
+            const verifyRes = await fetch(`${API_BASE_URL}/verify_razorpay_payment.php`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...response,
+                booking_id: orderResult.booking_id,
+                type: 'hotel'
+              }),
+            });
+            const verifyResult = await verifyRes.json();
+            if (verifyResult.success) {
+              setBookingSuccess({ booking_id: orderResult.booking_id, total_price: amount, nights });
+            } else {
+              setBookingError("Payment verification failed: " + verifyResult.message);
+            }
+          },
+          prefill: {
+            name: passengerDetails.name,
+            contact: passengerDetails.phone,
+            email: passengerDetails.email
+          },
+          theme: { color: "#3B82F6" }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          setBookingError("Payment failed: " + response.error.description);
+        });
+        rzp.open();
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/book_hotel.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData)
+      });
+      const data = await res.json();
+      
       if (data.status === "success") {
         setBookingSuccess({ ...data.data, nights });
         setBookingError(null);
       } else {
         setBookingError(data.message);
       }
+    } catch (err) {
+      setBookingError("Server error. Please try again later.");
+    } finally {
+      if (paymentMethod !== 'razorpay') {
+          setSubmitting(false);
+      }
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    const input = document.getElementById('hotel-reservation-summary');
+    html2canvas(input, { scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.setProperties({
+        title: `Hotel_Reservation_${bookingSuccess.booking_id}`,
+        subject: 'Hotel Reservation Confirmation',
+        author: 'Dream Travelers'
+      });
+      pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+      pdf.save(`Hotel_Reservation_${bookingSuccess.booking_id}.pdf`);
     });
   };
 
@@ -88,16 +190,20 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
           <h2>Stay Confirmed!</h2>
           <p>Your luxury experience at <strong>{hotel.hotel_name}</strong> is all set.</p>
           
-          <div className="booking-summary-card">
+          <div className="booking-summary-card" id="hotel-reservation-summary">
             <span className="summary-title">Reservation Details</span>
             <div className="summary-details">
               <p><span>Booking ID</span> <strong>#{bookingSuccess.booking_id}</strong></p>
+              <p><span>Hotel Name</span> <strong>{hotel.hotel_name}</strong></p>
               <p><span>Duration</span> <strong>{searchCriteria.checkIn} to {searchCriteria.checkOut} ({bookingSuccess.nights} nights)</strong></p>
               <p><span>Room Type</span> <strong>{selectedRoom.room_type}</strong></p>
               <p><span>Total Paid</span> <strong>₹{bookingSuccess.total_price}</strong></p>
             </div>
           </div>
           
+          <button className="btn-primary" style={{ width: '100%', marginBottom: '1rem', background: '#10b981' }} onClick={handleDownloadPDF}>
+            Download Ticket (PDF)
+          </button>
           <button className="btn-primary" style={{ width: '100%' }} onClick={onClose}>
             Back to Explore
           </button>
@@ -247,6 +353,15 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
                     <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)' }}>₹{selectedRoom.price_per_night * calculateNights(searchCriteria.checkIn, searchCriteria.checkOut) * searchCriteria.rooms}</span>
                   </div>
                 </div>
+
+                <PaymentSection 
+                  method={paymentMethod}
+                  details={paymentDetails}
+                  onChange={(m, d) => {
+                    setPaymentMethod(m);
+                    setPaymentDetails(d);
+                  }}
+                />
 
                 <button type="submit" className="btn-primary" style={{ width: "100%", marginTop: "1.5rem" }}>
                   Confirm Booking
