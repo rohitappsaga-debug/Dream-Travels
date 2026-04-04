@@ -82,11 +82,43 @@ $ins_sql = "INSERT INTO hotel_bookings (hotel_id, user_id, room_id, guest_name, 
             VALUES ($hotel_id, $user_id, $room_id, '$guest_name', '$phone', '$email', '$check_in', '$check_out', $num_guests, $num_rooms, $total_price, '$payment_method', '$payment_details')";
 
 if ($conn->query($ins_sql)) {
+    $booking_id = $conn->insert_id;
+    require_once __DIR__ . '/sms_helper.php';
+
+    // Fetch hotel name and room type for SMS
+    $hotel_name = 'Hotel';
+    $room_type  = 'Room';
+    $hinfo = $conn->query("SELECT h.hotel_name, hr.room_type FROM hotels h JOIN hotel_rooms hr ON hr.id = $room_id WHERE h.id = $hotel_id");
+    if ($hrow = $hinfo->fetch_assoc()) {
+        $hotel_name = $hrow['hotel_name'];
+        $room_type  = $hrow['room_type'];
+    }
+
+    $price_per_night = $room['price_per_night'];
+
+    $msg  = "Dear {$guest_name},\n";
+    $msg .= "Your hotel booking is CONFIRMED! \u2714\n\n";
+    $msg .= "--- Booking Details ---\n";
+    $msg .= "Booking ID   : #{$booking_id}\n";
+    $msg .= "Hotel        : {$hotel_name}\n";
+    $msg .= "Room Type    : {$room_type}\n";
+    $msg .= "Check-in     : {$check_in}\n";
+    $msg .= "Check-out    : {$check_out}\n";
+    $msg .= "Nights       : {$nights}\n";
+    $msg .= "Rooms        : {$num_rooms}\n";
+    $msg .= "Guests       : {$num_guests}\n";
+    $msg .= "Price/Night  : Rs.{$price_per_night}\n";
+    $msg .= "Total        : Rs.{$total_price}\n";
+    $msg .= "Payment      : {$payment_method}\n";
+    $msg .= "\nThank you for choosing Dream Travellers!";
+
+    send_booking_sms($phone, $msg);
+
     echo json_encode([
         'status' => 'success', 
         'message' => 'Booking successful!',
         'data' => [
-            'booking_id' => $conn->insert_id,
+            'booking_id' => $booking_id,
             'total_price' => $total_price,
             'nights' => $nights
         ]

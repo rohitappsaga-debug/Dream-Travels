@@ -157,7 +157,19 @@ try {
 
 } catch (Exception $e) {
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => $e->getMessage()]);
+    $msg = $e->getMessage();
+    $code = $e->getCode();
+    
+    // Check for duplicate entry (MySQL Error Code 1062)
+    if ($code == 1062 || strpos($msg, 'Duplicate entry') !== false) {
+        if (isset($type) && $type === 'bus') {
+            $msg = "This seat is already booked, please try another.";
+        } else {
+            $msg = "This booking already exists, please try again.";
+        }
+    }
+    
+    echo json_encode(["success" => false, "message" => $msg]);
 }
 
 $conn->close();

@@ -136,7 +136,7 @@ export default function Book() {
         const orderResult = await orderRes.json();
         
         if (!orderResult.success) {
-          alert("❌ Failed to create payment order: " + orderResult.message);
+          alert("❌ " + (orderResult.message || "Failed to create payment order"));
           return;
         }
 
@@ -424,6 +424,22 @@ export default function Book() {
                     setPaymentDetails(d);
                   }}
                 />
+
+                <div style={{ 
+                  backgroundColor: '#eff6ff', 
+                  color: '#1e40af', 
+                  padding: '1rem', 
+                  borderRadius: '0.5rem', 
+                  fontSize: '0.875rem', 
+                  marginTop: '1.5rem',
+                  border: '1px solid #bfdbfe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  <span><strong>Note:</strong> Your booking can be canceled if the required number of passengers is not met. Don't worry, you will get a full refund if this happens!</span>
+                </div>
 
                 <button type="submit" className="btn-primary" style={{ marginTop: '1.5rem' }}>
                   Confirm Booking

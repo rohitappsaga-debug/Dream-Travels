@@ -48,7 +48,10 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
       email: form.email,
       payment_method: form.paymentMethod,
       payment_details: JSON.stringify(form.paymentDetails),
-      amount: (bus.price || 750) * seatNumbers.length
+      amount: (bus.price || 750) * seatNumbers.length,
+      price_per_seat: bus.price || 750,
+      bus_name: bus.bus_name,
+      route: `${bus.source_city} to ${bus.destination_city}`
     };
 
     try {
@@ -61,7 +64,7 @@ export default function PassengerForm({ bus, routeId, seatNumbers, date, onCompl
         const orderResult = await orderRes.json();
         
         if (!orderResult.success) {
-          setError("Failed to create payment order: " + orderResult.message);
+          setError(orderResult.message || "Failed to create payment order");
           return;
         }
 

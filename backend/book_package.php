@@ -123,32 +123,23 @@ if (!empty($customer_email)) {
 
 $sms_sent = false;
 if (!empty($customer_phone) && function_exists('curl_init')) {
-    $sid   = getenv('TWILIO_ACCOUNT_SID') ?: '';
-    $token = getenv('TWILIO_AUTH_TOKEN') ?: '';
-    $from  = getenv('TWILIO_FROM_NUMBER') ?: '';
-    if ($sid && $token && $from) {
-        $body = "Dream Travellers: Your booking is confirmed. Package: {$package_title}, Date: {$travel_date}. Thank you!";
-        $to   = preg_replace('/\s+/', '', $customer_phone);
-        if (substr($to, 0, 1) !== '+') {
-            $to = '+' . $to;
-        }
-        $url = "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json";
-        $post = http_build_query([
-            'From' => $from,
-            'To'   => $to,
-            'Body' => $body,
-        ]);
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_USERPWD, "{$sid}:{$token}");
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-        $response = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        $sms_sent = ($code >= 200 && $code < 300);
-    }
+    require_once __DIR__ . '/sms_helper.php';
+    $total_amount = number_format((float)$package_price * $passengers, 2);
+    $price_fmt    = number_format((float)$package_price, 2);
+
+    $msg  = "Dear {$customer_name},\n";
+    $msg .= "Your package booking is CONFIRMED! \u2714\n\n";
+    $msg .= "--- Booking Details ---\n";
+    $msg .= "Booking ID   : #{$booking_id}\n";
+    $msg .= "Package      : {$package_title}\n";
+    $msg .= "Travel Date  : {$travel_date}\n";
+    $msg .= "Passengers   : {$passengers}\n";
+    $msg .= "Price/Person : Rs.{$price_fmt}\n";
+    $msg .= "Total Amount : Rs.{$total_amount}\n";
+    $msg .= "Payment      : {$payment_method}\n";
+    $msg .= "\nThank you for choosing Dream Travellers!";
+
+    $sms_sent = send_booking_sms($customer_phone, $msg);
 }
 
 $conn->close();

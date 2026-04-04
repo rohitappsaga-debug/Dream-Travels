@@ -37,6 +37,12 @@ if (!$stmt) {
 $stmt->bind_param("si", $status, $id);
 
 if ($stmt->execute() && $stmt->affected_rows > 0) {
+    require_once __DIR__ . '/sms_helper.php';
+    $res = $conn->query("SELECT customer_phone, package_title FROM bookings_data WHERE id = $id");
+    if ($row = $res->fetch_assoc()) {
+        $msg = "Dream Travellers: Your package booking ({$row['package_title']}) has been updated to status: {$status}.";
+        send_booking_sms($row['customer_phone'], $msg);
+    }
     echo json_encode(["success" => true, "message" => "Booking status updated to " . $status]);
 } else {
     echo json_encode(["success" => false, "message" => "Booking not found or no change"]);

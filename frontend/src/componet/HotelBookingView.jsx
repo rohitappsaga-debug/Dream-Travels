@@ -89,7 +89,7 @@ export default function HotelBookingView({ hotelId, searchCriteria, onClose }) {
         const orderResult = await orderRes.json();
         
         if (!orderResult.success) {
-          setBookingError("Failed to create payment order: " + orderResult.message);
+          setBookingError(orderResult.message || "Failed to create payment order");
           return;
         }
 

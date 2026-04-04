@@ -1,0 +1,9 @@
+{
+    "code": 400,
+    "response": {
+        "code": 21266,
+        "message": "'To' and 'From' number cannot be the same: +1463270XXXX",
+        "more_info": "https:\/\/www.twilio.com\/docs\/errors\/21266",
+        "status": 400
+    }
+}

@@ -18,8 +18,11 @@ $passenger_name = $data['passenger_name'] ?? '';
 $phone = $data['phone'] ?? '';
 $email = $data['email'] ?? '';
 $travel_date = $data['travel_date'] ?? '';
-$payment_method = $data['payment_method'] ?? '';
+$payment_method  = $data['payment_method'] ?? '';
 $payment_details = $data['payment_details'] ?? '';
+$price_per_seat  = (float) ($data['price_per_seat'] ?? 750);
+$req_bus_name    = trim($data['bus_name'] ?? '');
+$req_route       = trim($data['route'] ?? '');
 
 if (empty($bus_id) || empty($route_id) || empty($seat_numbers) || empty($passenger_name) || empty($phone) || empty($travel_date)) {
     echo json_encode(['success' => false, 'message' => 'All required fields must be filled.']);
@@ -78,7 +81,43 @@ try {
     }
 
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Booking confirmed successfully for ' . count($seat_numbers) . ' seats!', 'booking_id' => $conn->insert_id]);
+    $booking_id = $conn->insert_id;
+
+    // Build detailed SMS
+    require_once __DIR__ . '/sms_helper.php';
+
+    // Use values from request (already resolved by frontend)
+    // Fall back to DB query if not provided
+    $bus_name  = $req_bus_name ?: 'Bus';
+    $route_str = $req_route ?: '';
+    if (!$bus_name || !$route_str) {
+        $binfo = $conn->query("SELECT b.bus_name, r.source_city, r.destination_city FROM buses b JOIN routes r ON b.route_id = r.id WHERE b.id = $bus_id");
+        if ($brow = $binfo->fetch_assoc()) {
+            $bus_name  = $bus_name  ?: $brow['bus_name'];
+            $route_str = $route_str ?: ($brow['source_city'] . ' to ' . $brow['destination_city']);
+        }
+    }
+
+    $seats_str   = implode(', ', $seat_numbers);
+    $seats_count = count($seat_numbers);
+    $total_price = $price_per_seat * $seats_count;
+
+    $msg  = "Dear {$passenger_name},\n";
+    $msg .= "Your bus booking is CONFIRMED! ✔\n\n";
+    $msg .= "--- Booking Details ---\n";
+    $msg .= "Booking ID : #{$booking_id}\n";
+    $msg .= "Bus        : {$bus_name}\n";
+    $msg .= "Route      : {$route_str}\n";
+    $msg .= "Date       : {$travel_date}\n";
+    $msg .= "Seat(s)    : {$seats_str}\n";
+    $msg .= "Price/Seat : Rs.{$price_per_seat}\n";
+    $msg .= "Total      : Rs.{$total_price}\n";
+    $msg .= "Payment    : {$payment_method}\n";
+    $msg .= "\nThank you for choosing Dream Travellers!";
+
+    send_booking_sms($phone, $msg);
+
+    echo json_encode(['success' => true, 'message' => 'Booking confirmed successfully for ' . $seats_count . ' seats!', 'booking_id' => $booking_id]);
 
 } catch (Exception $e) {
     $conn->rollback();

@@ -13,6 +13,9 @@ export default function MyBookings() {
   const [newDate, setNewDate] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [editContactId, setEditContactId] = useState(null);
+  const [editContactData, setEditContactData] = useState({ phone: '', email: '' });
+  const [contactUpdateLoading, setContactUpdateLoading] = useState(false);
 
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
@@ -63,6 +66,43 @@ export default function MyBookings() {
       alert("Action failed. Please try again.");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleEditContactClick = (booking) => {
+    setEditContactId(booking.id);
+    const phone = booking.type === 'package' ? booking.customer_phone : booking.phone;
+    setEditContactData({ phone: phone || '', email: booking.email || '' });
+  };
+
+  const handleUpdateContact = async (booking) => {
+    setContactUpdateLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/update_booking_contact.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: booking.id,
+          type: booking.type,
+          phone: editContactData.phone,
+          email: editContactData.email
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Contact details updated successfully!");
+        setEditContactId(null);
+        fetchBookings();
+        if (selectedBooking && selectedBooking.id === booking.id) {
+            setSelectedBooking(null);
+        }
+      } else {
+        alert("Failed to update: " + data.message);
+      }
+    } catch (err) {
+      alert("Action failed. Please try again.");
+    } finally {
+      setContactUpdateLoading(false);
     }
   };
 
@@ -162,10 +202,43 @@ export default function MyBookings() {
                       </button>
                       <button className="btn-action-cancel" onClick={() => setPostponeId(null)}>Cancel</button>
                     </div>
+                  ) : editContactId === booking.id ? (
+                    <div className="postpone-form" style={{ flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Mobile Number"
+                        value={editContactData.phone} 
+                        onChange={e => setEditContactData({...editContactData, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
+                        className="form-control-sm"
+                        style={{ width: '100%' }}
+                      />
+                      {booking.type !== 'package' && (
+                        <input 
+                          type="email" 
+                          placeholder="Email Address"
+                          value={editContactData.email} 
+                          onChange={e => setEditContactData({...editContactData, email: e.target.value})} 
+                          className="form-control-sm"
+                          style={{ width: '100%' }}
+                        />
+                      )}
+                      <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                        <button 
+                          className="btn-action-confirm"
+                          onClick={() => handleUpdateContact(booking)}
+                          disabled={contactUpdateLoading}
+                          style={{ flex: 1 }}
+                        >
+                          {contactUpdateLoading ? 'Saving...' : 'Save'}
+                        </button>
+                        <button className="btn-action-cancel" onClick={() => setEditContactId(null)} style={{ flex: 1 }}>Cancel</button>
+                      </div>
+                    </div>
                   ) : (
                     <>
                       <button 
                         className="btn-postpone" 
+                        style={{ padding: '0.5rem 0.2rem', fontSize: '0.85rem' }}
                         onClick={() => setPostponeId(booking.id)}
                         disabled={actionLoading === booking.id}
                       >
@@ -173,6 +246,7 @@ export default function MyBookings() {
                       </button>
                       <button 
                         className="btn-cancel"
+                        style={{ padding: '0.5rem 0.2rem', fontSize: '0.85rem' }}
                         onClick={() => {
                           if (window.confirm("Are you sure you want to cancel this booking?")) {
                             handleAction(booking.id, booking.type, 'cancel');
@@ -181,6 +255,14 @@ export default function MyBookings() {
                         disabled={actionLoading === booking.id}
                       >
                         Cancel
+                      </button>
+                      <button 
+                        className="btn-postpone" 
+                        style={{ background: '#f1f5f9', color: '#475569', padding: '0.5rem 0.2rem', fontSize: '0.85rem' }}
+                        onClick={() => handleEditContactClick(booking)}
+                        disabled={actionLoading === booking.id}
+                      >
+                        Edit Contact
                       </button>
                     </>
                   )}
@@ -288,6 +370,8 @@ export default function MyBookings() {
                   </>
                 )}
               </div>
+
+
 
               <div className="payment-details-section">
                 <h4>Payment Information</h4>
